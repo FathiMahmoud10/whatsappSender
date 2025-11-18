@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dashboard — نظام سحب أرقام واتساب</title>
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#f5f7fb; --card:#ffffff; --muted:#6b7280;
+  --accent1:#4f46e5; --accent2:#7c3aed; --accent-grad: linear-gradient(90deg,var(--accent1),var(--accent2));
+  --success:#06b64b; --danger:#ef4444; --radius:14px; --shadow: 0 6px 22px rgba(16,24,40,0.08);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; min-height:100%; background: radial-gradient(1200px 300px at 10% 10%, rgba(124,58,237,0.06), transparent), radial-gradient(900px 220px at 90% 80%, rgba(79,70,229,0.04), transparent), var(--bg);
+  font-family: "Cairo", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial; color:#111827; padding:28px; display:flex; justify-content:center;
+}
+/* layout */
+.container{ width:100%; max-width:1100px; display:grid; gap:22px; grid-template-columns: 420px 1fr; align-items:start; }
+.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding:20px; overflow:hidden; position:relative; }
+.header{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.logo-badge{ width:54px;height:54px;border-radius:12px; background:var(--accent-grad); display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700; box-shadow: 0 6px 18px rgba(99,102,241,0.12); transform:translateY(-2px); }
+.title{ font-size:20px;font-weight:700 } .subtitle{ font-size:13px;color:var(--muted); margin-top:2px }
+
+/* QR & status */
+.qrBox{ display:flex; flex-direction:column; gap:10px; align-items:center; margin-top:8px }
+.qrImg{ width:220px; height:220px; border-radius:12px; background:#fafafa; border:1px dashed #eee; display:flex; align-items:center; justify-content:center; overflow:hidden }
+.qrImg img{ width:100%; height:100%; object-fit:contain; border-radius:10px }
+.status{ font-size:13px;color:var(--muted); text-align:center }
+
+/* search */
+.search { margin-top:14px; display:flex; gap:10px; align-items:center; }
+.search input{ flex:1; padding:10px 12px; border-radius:10px; border:1px solid #e6e9ef; background:#fbfdff; font-size:14px; outline:none; }
+.search .btn{ background:var(--accent-grad); color:#fff; padding:10px 14px; border-radius:10px; border:none; cursor:pointer; font-weight:600; }
+
+/* contacts list */
+.listCard{ margin-top:14px; border-radius:10px; padding:10px; background:linear-gradient(180deg,#ffffff,#fbfdff); border:1px solid #eef2ff; height:420px; display:flex; flex-direction:column; overflow:hidden; }
+.listHead{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px }
+.small{ font-size:13px; color:var(--muted) }
+.controls{ display:flex; gap:8px; align-items:center }
+.smallBtn{ border:1px solid #e9eefb; background:#fff; padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:600; color:var(--muted) }
+.countBadge{ background:linear-gradient(90deg,#eef2ff,#f6f6ff); padding:6px 10px; border-radius:999px; font-weight:700; color:var(--accent2); border:1px solid rgba(124,58,237,0.06) }
+
+/* Downloads */
+.downloadsRow { margin-top:12px; display:flex; gap:10px; }
+.downloadsRow a { flex:1; text-align:center; padding:10px; background:var(--accent-grad); color:white; border-radius:10px; font-weight:700; text-decoration:none; }
+
+/* scroll */
+.contacts{ flex:1; overflow:auto; padding-right:6px; scrollbar-width:thin; }
+.contacts::-webkit-scrollbar{ width:10px } .contacts::-webkit-scrollbar-thumb{ background:linear-gradient(90deg,#d5d0ff,#efe6ff); border-radius:8px; border:2px solid #fff }
+
+/* contact row */
+.row{ display:flex; align-items:center; justify-content:space-between; padding:10px; border-radius:10px; margin-bottom:6px; transition:background .12s, transform .08s; }
+.row:hover{ background:linear-gradient(90deg,rgba(79,70,229,0.03),rgba(124,58,237,0.02)); transform:translateY(-2px) }
+.info{ display:flex; gap:12px; align-items:center }
+.avatar{ width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#eef2ff,#f8f3ff); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--accent2) }
+.meta{ display:flex; flex-direction:column; text-align:right } .meta .name{ font-weight:700 } .meta .phone{ font-size:13px; color:var(--muted) }
+.actions{ display:flex; gap:8px; align-items:center } .checkbox{ width:22px; height:22px; border-radius:6px; border:1px solid #e6e9ef; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; background:#fff; } .checkbox.checked{ background:linear-gradient(90deg,#7c3aed,#4f46e5); color:white; border:none }
+
+/* selected panel */
+.rightPanel{ display:flex; flex-direction:column; gap:16px; } 
+.panel-card{ background:var(--card); border-radius:14px; padding:18px; box-shadow:var(--shadow); }
+
+/* selected list */
+.selectedList{ display:flex; flex-direction:column; gap:8px; max-height:200px; overflow:auto; padding-right:6px }
+.selItem{ display:flex; align-items:center; justify-content:space-between; padding:8px; border-radius:10px; border:1px solid #f0f3ff; background:linear-gradient(180deg,#fff,#fbfdff) }
+.removeBtn{ background:transparent; border:none; color:var(--danger); cursor:pointer; font-weight:700 }
+
+/* message box */
+.msgArea textarea{ width:100%; min-height:120px; border-radius:10px; padding:12px; border:1px solid #e6eefb; resize:vertical; font-size:14px }
+.sendRow{ display:flex; gap:10px; align-items:center; margin-top:12px } 
+.sendBtn{ flex:1; padding:12px; border-radius:12px; border:none; background:var(--accent-grad); color:#fff; font-weight:700; cursor:pointer; }
+
+/* status row */
+.progressRow{ display:flex; gap:12px; align-items:center; justify-content:space-between; margin-top:8px } 
+.sentCount{ font-weight:700; color:var(--success) }
+
+/* responsive */
+@media (max-width:980px){ .container{ grid-template-columns:1fr; padding:14px } .qrImg{ width:160px;height:160px } }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- left column -->
+  <div class="card">
+    <div class="header">
+      <div class="logo-badge">WA</div>
+      <div>
+        <div class="title">نظام سحب أرقام واتساب</div>
+        <div class="subtitle">لوحة تحكم — اتصل بالواتساب وابدأ السحب</div>
+      </div>
+    </div>
+
+    <div class="qrBox">
+      <div id="qr" class="qrImg"><div style="padding:12px;color:var(--muted)">جاري انتظار QR...</div></div>
+      <div id="status" class="status">في انتظار الاتصال...</div>
+    </div>
+
+    <div class="search">
+      <input id="searchInput" placeholder="ابحث باسم أو رقم..." />
+      <button class="btn" id="refreshBtn" title="تحديث">تحديث</button>
+    </div>
+
+    <div class="listCard" aria-live="polite">
+      <div class="listHead">
+        <div class="left">
+          <div class="small">جميع الأرقام</div>
+          <div class="countBadge" id="totalCount">0</div>
+        </div>
+        <div class="controls">
+          <button class="smallBtn" id="selectAllBtn">تحديد/إلغاء الكل</button>
+        </div>
+      </div>
+      <div class="contacts" id="contactsList"></div>
+    </div>
+  </div>
+
+  <!-- right column -->
+  <div class="rightPanel">
+
+    <!-- selected numbers -->
+    <div class="panel-card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:800;font-size:16px">📌 الأرقام المُحددة</div>
+        <div class="previewSmall" id="selectedPreviewCount">0 محدد</div>
+      </div>
+
+      <div class="selectedList" id="selectedList"></div>
+
+      <div style="margin-top:10px;font-size:13px;color:var(--muted)">اضغط على اسم لحذفه من القائمة المُحددة</div>
+
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button id="selectUnsentBtn" class="smallBtn">تحديد غير المرسلة</button>
+        <button id="saveSelectedExcel" class="smallBtn">حفظ Excel</button>
+        <button id="saveSelectedVCF" class="smallBtn">حفظ VCF</button>
+      </div>
+    </div>
+
+    <!-- message -->
+    <div class="panel-card">
+      <div style="font-weight:800;margin-bottom:8px">✉️ الرسالة (نص فقط)</div>
+      <div class="msgArea">
+        <textarea id="messageText" placeholder="اكتب الرسالة هنا..."></textarea>
+      </div>
+
+      <div class="sendRow">
+        <button id="sendBtn" class="sendBtn">🚀 إرسال الرسالة</button>
+      </div>
+
+      <div class="progressRow">
+        <div id="logMsg" class="previewSmall">لم يتم الإرسال بعد</div>
+        <div class="sentCount" id="sentCount">0</div>
+      </div>
+    </div>
+
+    <!-- ===================== Usage Stats Card ===================== -->
+    <div class="panel-card" id="usageCard">
+      <div style="font-weight:800;margin-bottom:8px">📊 إحصائيات الاستخدام</div>
+
+      <div style="font-size:14px;color:var(--muted);margin-bottom:10px">
+        <b>عدد مرات الاستخدام:</b>
+        <span id="usageCount" style="font-weight:700;color:var(--accent2)">0</span>
+      </div>
+
+      <div style="font-weight:700;margin-bottom:6px">آخر التواريخ:</div>
+      <ul id="usageList" style="margin:0;padding-right:18px;font-size:13px;color:var(--muted);line-height:1.9"></ul>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  localStorage.clear();
+
+const ws = new WebSocket('ws://' + location.host);
+
+let contacts = [];
+let filtered = [];
+let selected = new Map();
+let sentSet = new Set();
+
+const statusEl = document.getElementById('status');
+const qrEl = document.getElementById('qr');
+const contactsListEl = document.getElementById('contactsList');
+const totalCountEl = document.getElementById('totalCount');
+const searchInput = document.getElementById('searchInput');
+const selectAllBtn = document.getElementById('selectAllBtn');
+const selectedListEl = document.getElementById('selectedList');
+const selectedPreviewCount = document.getElementById('selectedPreviewCount');
+const messageText = document.getElementById('messageText');
+const sendBtn = document.getElementById('sendBtn');
+const sentCountEl = document.getElementById('sentCount');
+const logMsg = document.getElementById('logMsg');
+const refreshBtn = document.getElementById('refreshBtn');
+const saveSelectedExcel = document.getElementById('saveSelectedExcel');
+const saveSelectedVCF = document.getElementById('saveSelectedVCF');
+const selectUnsentBtn = document.getElementById('selectUnsentBtn');
+
+/* ========== Render Contacts ========== */
+function renderContacts(list){
+  contactsListEl.innerHTML = '';
+  list.forEach(c => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.dataset.phone = c.Phone;
+
+    const info = document.createElement('div'); info.className='info';
+    const avatar = document.createElement('div'); avatar.className='avatar';
+    const initials = (c.Name||'').split(' ').map(s=>s[0]||'').join('').slice(0,2).toUpperCase();
+    avatar.textContent = initials || 'WA';
+
+    const meta = document.createElement('div'); meta.className='meta';
+    meta.innerHTML = `<div class="name">${c.Name||'بدون اسم'}</div>
+                      <div class="phone">${c.Phone}</div>`;
+
+    info.appendChild(avatar); info.appendChild(meta);
+
+    const actions = document.createElement('div'); actions.className='actions';
+    const cb = document.createElement('div'); cb.className='checkbox';
+    if (selected.has(c.Phone)) { cb.classList.add('checked'); cb.innerHTML='✓'; }
+    cb.addEventListener('click', (ev)=>{ ev.stopPropagation(); toggleSelect(c); });
+
+    const status = document.createElement('div'); status.className='small';
+    status.id = 'st_' + c.Phone;
+    status.textContent = sentSet.has(c.Phone) ? 'تم الإرسال' : '';
+
+    actions.appendChild(cb); actions.appendChild(status);
+
+    row.appendChild(info); row.appendChild(actions);
+    row.addEventListener('click', ()=> toggleSelect(c));
+
+    contactsListEl.appendChild(row);
+  });
+  totalCountEl.textContent = list.length;
+}
+
+/* toggle select */
+function toggleSelect(contact){
+  const phone = contact.Phone;
+  if (selected.has(phone)) selected.delete(phone);
+  else selected.set(phone, contact);
+  updateSelectedUI();
+  renderContacts(filtered);
+}
+
+/* update selected list */
+function updateSelectedUI(){
+  selectedListEl.innerHTML = '';
+  selectedPreviewCount.textContent = selected.size + ' محدد';
+
+  selected.forEach((c, phone)=>{
+    const el = document.createElement('div');
+    el.className='selItem';
+    el.innerHTML = `
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="width:34px;height:34px;border-radius:8px;background:linear-gradient(90deg,#eef2ff,#f8f3ff);display:flex;align-items:center;justify-content:center;font-weight:700">
+          ${(c.Name||'').split(' ').map(s=>s[0]||'').join('').slice(0,2).toUpperCase()}
+        </div>
+        <div>
+          <div style="font-weight:700">${c.Name}</div>
+          <div style="font-size:13px;color:var(--muted)">${c.Phone}</div>
+        </div>
+      </div>
+      <div><button class="removeBtn" data-phone="${phone}">حذف</button></div>
+    `;
+    el.querySelector('.removeBtn').addEventListener('click', ()=>{
+      selected.delete(phone);
+      updateSelectedUI();
+      renderContacts(filtered);
+    });
+    selectedListEl.appendChild(el);
+  });
+}
+
+/* search */
+searchInput.addEventListener('input', e=>{
+  const q = e.target.value.trim();
+  if (!q) filtered = contacts.slice();
+  else {
+    const low = q.toLowerCase();
+    filtered = contacts.filter(c =>
+      (c.Name||'').toLowerCase().includes(low) ||
+      (c.Phone||'').includes(q)
+    );
+  }
+  renderContacts(filtered);
+});
+
+/* select all */
+selectAllBtn.addEventListener('click', ()=>{
+  if (selected.size === filtered.length) selected.clear();
+  else filtered.forEach(c => selected.set(c.Phone, c));
+  updateSelectedUI();
+  renderContacts(filtered);
+});
+
+/* select unsent */
+selectUnsentBtn.addEventListener('click', ()=>{
+  selected.clear();
+  filtered.forEach(c=>{
+    if (!sentSet.has(c.Phone)) selected.set(c.Phone, c);
+  });
+  updateSelectedUI();
+  renderContacts(filtered);
+});
+
+/* save selected */
+function requestSaveSelected(format){
+  const phones = [...selected.keys()];
+  if (phones.length === 0) return alert('لم يتم اختيار أرقام');
+  ws.send(JSON.stringify({ type:'saveSelected', phones, format }));
+  logMsg.textContent = 'جاري إنشاء الملف...';
+}
+saveSelectedExcel.addEventListener('click', ()=>requestSaveSelected('excel'));
+saveSelectedVCF.addEventListener('click', ()=>requestSaveSelected('vcf'));
+
+/* send text */
+sendBtn.addEventListener('click', ()=>{
+  const msg = messageText.value.trim();
+  if (!msg) return alert('اكتب الرسالة أولاً');
+  if (selected.size === 0) return alert('اختر الأرقام');
+
+  ws.send(JSON.stringify({ type:'sendMessage', phones:[...selected.keys()], message:msg }));
+  logMsg.textContent = '🚀 إرسال جارٍ...';
+});
+
+/* =================== Usage Stats =================== */
+function loadUsage() {
+  const usageCount = localStorage.getItem('usage_count') || 0;
+  const usageHistory = JSON.parse(localStorage.getItem('usage_history') || '[]');
+
+  document.getElementById('usageCount').textContent = usageCount;
+
+  const listEl = document.getElementById('usageList');
+  listEl.innerHTML = '';
+  usageHistory.slice(0,5).forEach(t=>{
+    const li = document.createElement('li');
+    li.textContent = t;
+    listEl.appendChild(li);
+  });
+}
+function addUsageEntry(){
+  let usageCount = Number(localStorage.getItem('usage_count') || 0);
+  let usageHistory = JSON.parse(localStorage.getItem('usage_history') || '[]');
+
+  usageCount++;
+  usageHistory.unshift(new Date().toLocaleString('ar-EG'));
+
+  usageHistory = usageHistory.slice(0,20);
+
+  localStorage.setItem('usage_count', usageCount);
+  localStorage.setItem('usage_history', JSON.stringify(usageHistory));
+}
+
+/* WebSocket core */
+ws.addEventListener('message', evt=>{
+  try {
+    const data = JSON.parse(evt.data);
+
+    if (data.type === 'qr') {
+      qrEl.innerHTML = `<img src="${data.qr}" alt="QR" />`;
+      statusEl.textContent = '📶 امسح الكيو آر من واتساب';
+    }
+
+    if (data.type === 'status') statusEl.textContent = data.message;
+
+    if (data.type === 'contacts') {
+      contacts = data.list;
+      filtered = contacts.slice();
+      renderContacts(filtered);
+      logMsg.textContent = 'تم تحميل الأرقام';
+    }
+
+    if (data.type === 'progress') {
+      sentSet.add(data.phone);
+      const st = document.getElementById('st_' + data.phone);
+      if (st) st.textContent = 'تم الإرسال';
+      sentCountEl.textContent = sentSet.size;
+      logMsg.textContent = `تم الإرسال إلى ${data.phone}`;
+    }
+
+  } catch(err){ console.log(err); }
+});
+
+/* on load */
+window.addEventListener('load', ()=>{
+  filtered = contacts.slice();
+  renderContacts(filtered);
+
+  addUsageEntry();
+  loadUsage();
+});
+</script>
+
+</body>
+</html>
