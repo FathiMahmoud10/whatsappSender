@@ -1,22 +1,19 @@
 const puppeteer = require("puppeteer");
 
-async function startBrowser() {
+(async () => {
     const browser = await puppeteer.launch({
-        headless: "new",
+        headless: true,
         args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--no-zygote',
-            '--single-process'
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
+            "--no-zygote",
+            "--single-process"
         ]
     });
 
-    console.log("Browser started on Render");
-    return browser;
-}
+    console.log("Puppeteer started on Render");
 
-startBrowser().catch(console.error);
-
-require("./server.js");
+    require("./server.js");
+})();
