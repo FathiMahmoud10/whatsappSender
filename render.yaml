@@ -3,7 +3,4 @@ services:
     name: whatsappSender
     env: node
     buildCommand: npm install
-    startCommand: node index.js
-    envVars:
-      PUPPETEER_CACHE_DIR: "/opt/render/.cache/puppeteer"
-      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "false"
+    startCommand: npm start

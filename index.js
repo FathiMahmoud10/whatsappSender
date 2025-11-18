@@ -2,7 +2,7 @@ const puppeteer = require("puppeteer");
 
 async function startBrowser() {
     const browser = await puppeteer.launch({
-        headless: true,
+        headless: "new",
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -13,14 +13,10 @@ async function startBrowser() {
         ]
     });
 
-    console.log("Browser started successfully on Render");
-
-    // لو محتاج ترجع browser لكود تاني
+    console.log("Browser started on Render");
     return browser;
 }
 
-// شغّل المتصفح
 startBrowser().catch(console.error);
 
-// شغّل السيرفر
 require("./server.js");
